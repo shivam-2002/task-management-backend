@@ -42,7 +42,6 @@ router.put("/:id", authenticate, async (req: any, res) => {
         "UPDATE tasks SET title=?, description=?, status=? WHERE id=? AND user_id=?",
         [title, description, status, req.params.id, req.user.id]
     );
-    console.log(result);
     res.json({ message: "Task updated" });
 });
 

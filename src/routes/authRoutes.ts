@@ -17,7 +17,6 @@ router.post("/register", async (req, res) => {
             [name, email, hashedPassword]
         );
 
-        // MySQL returns `insertId` inside the result object
         res.json({ message: "User registered successfully", userId: (result as any).insertId });
     } catch (error) {
         res.status(500).json({ error: `User registration failed ${error}` });
@@ -43,6 +42,39 @@ router.post("/login", async (req: any, res: any) => {
         res.json({ token });
     } catch (error) {
         res.status(500).json({ error: "Login failed" });
+    }
+});
+
+const authenticateToken = (req: any, res: any, next: Function) => {
+    const token = req.header("Authorization")?.split(" ")[1];
+
+    if (!token) {
+        return res.status(401).json({ error: "Access Denied. No token provided." });
+    }
+
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET) as { id: number };
+        (req as any).user = decoded;
+        next();
+    } catch (error) {
+        res.status(401).json({ error: "Invalid or expired token." });
+    }
+};
+
+// Validate Token API
+router.get("/validate-token", authenticateToken, async (req: any, res: any) => {
+    try {
+        const userId = (req as any).user.id;
+        const [rows] = await pool.execute("SELECT id, name, email FROM users WHERE id = ?", [userId]);
+
+        if ((rows as any[]).length === 0) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        const user = (rows as any[])[0];
+        res.json({ message: "Token is valid", user });
+    } catch (error) {
+        res.status(500).json({ error: "Internal Server Error" });
     }
 });
 
