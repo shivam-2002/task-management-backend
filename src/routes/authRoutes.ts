@@ -17,7 +17,6 @@ router.post("/register", async (req, res) => {
             [name, email, hashedPassword]
         );
 
-        // MySQL returns `insertId` inside the result object
         res.json({ message: "User registered successfully", userId: (result as any).insertId });
     } catch (error) {
         res.status(500).json({ error: `User registration failed ${error}` });
